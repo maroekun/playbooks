@@ -1,0 +1,26 @@
+---
+- name: comment-out `net.bridge.bridge-nf-call-*` line
+  replace:
+    dest=/etc/sysctl.conf
+    regexp='^(net.bridge.bridge-nf-call-(ip6tables|iptables|arptables)\s*=\s*\d+)$'
+    replace='#\1'
+
+- name: `vm.overcommit_memory` set to 1
+  sysctl:
+    name="vm.overcommit_memory"
+    value=1
+    sysctl_set=yes
+
+- name: increase somaxconn limit number
+  sysctl:
+    name="net.core.somaxconn"
+    value=2048
+    sysctl_set=yes
+
+- lineinfile: 
+    dest=/etc/rc.local
+    line='for i in /sys/kernel/mm/transparent_hugepage/enabled; do echo never > $i; done'
+- lineinfile: 
+    dest=/etc/rc.local
+    line='for i in /sys/kernel/mm/transparent_hugepage/defrag; do echo never > $i; done'
+- shell: for i in /sys/kernel/mm/*transparent_hugepage/enabled; do echo never > $i; done
