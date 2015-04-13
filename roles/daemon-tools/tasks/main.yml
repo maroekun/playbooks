@@ -1,0 +1,43 @@
+---
+- name: Install dependency packages
+  yum: name={{ item }} state=present
+  with_items:
+    - gcc
+    - wget
+    - tar
+
+- name: Create package directory
+  file: path=/package
+        state=directory
+        mode=1755
+
+- name: Download daemontools
+  get_url:
+    url=http://cr.yp.to/daemontools/daemontools-0.76.tar.gz
+    dest=/package/daemontools-0.76.tar.gz
+
+- name: Un-archive package
+  unarchive:
+    src=/package/daemontools-0.76.tar.gz
+    dest=/package
+    copy=no
+
+- name: Check svc installed
+  shell: /usr/local/bin/svc 2>/dev/null
+  register: check_svc_installed
+  ignore_errors: yes
+
+- name: Run install daemontools
+  script: install-daemontools.sh
+  when: check_svc_installed|failed
+
+- name: Put svscan.conf
+  copy: src=svscan.conf
+        dest=/etc/init/svscan.conf
+        owner=root
+        group=root
+        mode=0644
+
+- name: Start svscan
+  shell: initctl start svscan
+  ignore_errors: yes
