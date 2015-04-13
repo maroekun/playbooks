@@ -1,0 +1,18 @@
+---
+- name: check ldconfig
+  shell: ldconfig -v 2>/dev/null | grep libevent-2.0
+  register: check_libevent_ldconfig
+  ignore_errors: yes
+
+- name: Download libevent from source_url
+  get_url:
+    url={{ libevent_source_url }}
+    dest=/usr/local/src/{{ libevent_name }}.tar.gz
+  when: check_libevent_ldconfig|failed
+
+- name: install libevent
+  script:
+    install-libevent.sh {{ libevent_name }}
+    creates={{ libevent_name }}
+  when: check_libevent_ldconfig|failed
+
